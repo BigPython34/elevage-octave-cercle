@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Élevages</title>
+</head>
+<body>
+    <h1>Liste des élevages</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Lapins Mâles</th>
+                <th>Lapins Femelles</th>
+                <th>Nourriture</th>
+                <th>Cages</th>
+                <th>Argent</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for elevage in elevages %}
+                <tr>
+                    <td>{{ elevage.nom }}</td>
+                    <td>{{ elevage.nombre_lapins_males }}</td>
+                    <td>{{ elevage.nombre_lapins_femelles }}</td>
+                    <td>{{ elevage.nourriture }}</td>
+                    <td>{{ elevage.cages }}</td>
+                    <td>{{ elevage.argent }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

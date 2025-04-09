@@ -3,7 +3,7 @@ from .forms import InitialisationForm
 from .models import Elevage
 def confirmation(request):
 
-    return render(request, 'jeu/confirmation.html')  
+    return render(request, 'jeuconfirmation.html')  
 
 def nouveau(request):
     if request.method == 'POST':
@@ -25,7 +25,7 @@ def nouveau(request):
             argent=argent
             )
 
-            # Sauvegarder l'objet Elevage dans la base de données
+            
             elevage.save()
 
             return redirect('jeu:confirmation')  
@@ -33,3 +33,9 @@ def nouveau(request):
         form = InitialisationForm()
 
     return render(request, 'jeu/nouveau.html', {'form': form})
+
+def liste(request):
+
+    elevages = Elevage.objects.all()
+
+    return render(request, 'jeu/liste.html', {'elevages': elevages})
