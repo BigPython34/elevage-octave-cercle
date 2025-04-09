@@ -11,12 +11,7 @@ class Elevage(models.Model):
     def __str__(self):
         return self.nom+f"  avec {self.nombre_lapins_males} mâles, {self.nombre_lapins_femelles} femelles, {self.cages} cages."
 
-    def total_lapins(self):
-        """
-        Retourne le nombre total de lapins dans l'élevage (mâles + femelles).
-        """
-        return self.nombre_lapins_males + self.nombre_lapins_femelles
-    
+
 class Individu(models.Model):
     ETAT_CHOICES = [
         ('present', 'Présent'),

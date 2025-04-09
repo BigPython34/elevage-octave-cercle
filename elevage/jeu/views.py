@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from .forms import InitialisationForm
 from .models import Elevage
 def confirmation(request):
@@ -39,3 +39,14 @@ def liste(request):
     elevages = Elevage.objects.all()
 
     return render(request, 'jeu/liste.html', {'elevages': elevages})
+
+
+def elevage(request, elevage_id):
+
+    elevage = get_object_or_404(Elevage, pk=elevage_id)
+    
+
+    individus = elevage.individus.all() 
+    
+
+    return render(request, 'jeu/elevage_detail.html', {'elevage': elevage, 'individus': individus})
