@@ -7,9 +7,9 @@ class Elevage(models.Model):
     nourriture = models.IntegerField(default=0)  
     argent = models.IntegerField(default=0)  
     cages = models.IntegerField(default=0)  
-
+    nom = models.CharField(max_length=100, unique=True,default="Nom par défaut")
     def __str__(self):
-        return f"Elevage avec {self.nombre_lapins_males} mâles, {self.nombre_lapins_femelles} femelles, {self.cages} cages."
+        return self.nom+f"  avec {self.nombre_lapins_males} mâles, {self.nombre_lapins_femelles} femelles, {self.cages} cages."
 
     def total_lapins(self):
         """

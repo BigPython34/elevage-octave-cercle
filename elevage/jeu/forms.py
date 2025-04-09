@@ -2,6 +2,7 @@
 from django import forms
 
 class InitialisationForm(forms.Form):
+    nom=forms.CharField(label="Nom de l'élevage")
     nb_lapins_males = forms.IntegerField(label='Nombre de mâles', min_value=0)
     nb_lapins_femelles = forms.IntegerField(label='Nombre de femelles', min_value=0)
     nb_lapins_reproducteurs = forms.IntegerField(label='Nombre de lapins reproducteurs', min_value=0)
