@@ -1,0 +1,22 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Environnement virtuel
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Fichiers de configuration d'IDE (Visual Studio Code, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Fichiers de la base de données SQLite (si utilisée)
+db.sqlite3
+
+# Fichiers de log
+*.log
