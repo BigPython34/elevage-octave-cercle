@@ -16,3 +16,21 @@ class Elevage(models.Model):
         Retourne le nombre total de lapins dans l'élevage (mâles + femelles).
         """
         return self.nombre_lapins_males + self.nombre_lapins_femelles
+    
+class Individu(models.Model):
+    ETAT_CHOICES = [
+        ('present', 'Présent'),
+        ('vendu', 'Vendu'),
+        ('mort', 'Mort'),
+        ('gravide', 'Gravide'),
+    ]
+
+    SEXE_CHOICES = [
+        ('m', 'Mâle'),
+        ('f', 'Femelle'),
+    ]
+
+    elevage = models.ForeignKey(Elevage, on_delete=models.CASCADE, related_name='individus')
+    sexe = models.CharField(max_length=1, choices=SEXE_CHOICES)
+    age = models.IntegerField()  
+    etat = models.CharField(max_length=7, choices=ETAT_CHOICES, default='present')
