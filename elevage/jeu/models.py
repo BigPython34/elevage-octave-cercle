@@ -1,14 +1,21 @@
 from django.db import models
 
 
-class Elevage(models.Model):
-    nombre_lapins_males = models.IntegerField(default=0)  
-    nombre_lapins_femelles = models.IntegerField(default=0)  
+class Elevage(models.Model): 
     nourriture = models.IntegerField(default=0)  
     argent = models.IntegerField(default=0)  
     cages = models.IntegerField(default=0)  
     nom = models.CharField(max_length=100, unique=True,default="Nom par défaut")
     
+    @property
+    def nombre_lapins_males(self):
+
+        return self.individus.filter(sexe='m', etat='present').count()
+
+    @property
+    def nombre_lapins_femelles(self):
+
+        return self.individus.filter(sexe='f', etat='present').count()
     def __str__(self):
         return self.nom
 
