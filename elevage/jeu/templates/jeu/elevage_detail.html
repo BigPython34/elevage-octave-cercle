@@ -44,3 +44,30 @@
     <a href="{% url 'jeu:liste' %}">Retour à la liste des élevages</a>
 </body>
 </html>
+
+<h2>Actions du tour</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>Vente de lapins</legend>
+        {{ form.vendre_males.label_tag }} {{ form.vendre_males }}
+        {{ form.vendre_femelles.label_tag }} {{ form.vendre_femelles }}
+    </fieldset>
+
+    <fieldset>
+        <legend>Achat de ressources</legend>
+        {{ form.acheter_nourriture.label_tag }} {{ form.acheter_nourriture }}
+        {{ form.acheter_cages.label_tag }} {{ form.acheter_cages }}
+    </fieldset>
+
+    {% if form.non_field_errors %}
+        <ul style="color: red;">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <button type="submit">Valider les actions</button>
+</form>
