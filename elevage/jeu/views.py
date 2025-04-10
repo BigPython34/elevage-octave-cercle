@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect,get_object_or_404
-from .forms import InitialisationForm
+from .forms import InitialisationForm,TourActionForm
 from .models import Elevage
+
 def confirmation(request):
 
     return render(request, 'jeuconfirmation.html')  
@@ -42,11 +43,59 @@ def liste(request):
 
 
 def elevage(request, elevage_id):
-
     elevage = get_object_or_404(Elevage, pk=elevage_id)
-    
+    individus = elevage.individus.all()
 
-    individus = elevage.individus.all() 
-    
+    if request.method == 'POST':
+        form = TourActionForm(request.POST)
+        if form.is_valid():
+            actions = form.cleaned_data
 
-    return render(request, 'jeu/elevage_detail.html', {'elevage': elevage, 'individus': individus})
+            vendre_males = actions['vendre_males']
+            vendre_femelles = actions['vendre_femelles']
+            acheter_nourriture = actions['acheter_nourriture']
+            acheter_cages = actions['acheter_cages']
+
+            males = elevage.nombre_lapins_males
+            femelles = elevage.nombre_lapins_femelles
+            argent = elevage.argent
+
+            erreurs = []
+            if vendre_males > males:
+                erreurs.append("Vous ne pouvez pas vendre plus de lapins mâles que vous n'en avez.")
+            if vendre_femelles > femelles:
+                erreurs.append("Vous ne pouvez pas vendre plus de femelles que vous n'en avez.")
+
+
+            prix_vente_male = 1
+            prix_vente_femelle = 1
+            prix_nourriture = 1
+            prix_cage = 1
+
+            total_achats = acheter_nourriture * prix_nourriture + acheter_cages * prix_cage
+            total_ventes = vendre_males * prix_vente_male + vendre_femelles * prix_vente_femelle
+
+            if total_achats > argent + total_ventes:
+                erreurs.append("Vous n'avez pas assez d'argent pour ces achats.")
+
+            if erreurs:
+                for erreur in erreurs:
+                    form.add_error(None, erreur)
+            else:
+                # Mise à jour des ressources
+                elevage.nombre_lapins_males -= vendre_males
+                elevage.nombre_lapins_femelles -= vendre_femelles
+                elevage.nourriture += acheter_nourriture
+                elevage.cages += acheter_cages
+                elevage.argent += total_ventes - total_achats
+
+                elevage.save()
+                return redirect('jeu:elevage_detail', elevage_id=elevage.id)
+    else:
+        form = TourActionForm()
+
+    return render(request, 'jeu/elevage_detail.html', {
+        'elevage': elevage,
+        'individus': individus,
+        'form': form,
+    })
