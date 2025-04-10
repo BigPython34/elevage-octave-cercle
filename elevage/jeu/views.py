@@ -1,35 +1,49 @@
 from django.shortcuts import render, redirect,get_object_or_404
 from .forms import InitialisationForm,TourActionForm
-from .models import Elevage
-
+from .models import Elevage,Individu,Regle
+from django.contrib import messages
 def confirmation(request):
 
-    return render(request, 'jeuconfirmation.html')  
+    return render(request, 'jeu:confirmation.html')  
 
 def nouveau(request):
     if request.method == 'POST':
         form = InitialisationForm(request.POST)
         if form.is_valid():
+
+            nom = form.cleaned_data['nom']
             nb_lapins_males = form.cleaned_data['nb_lapins_males']
             nb_lapins_femelles = form.cleaned_data['nb_lapins_femelles']
-            
             nourriture = form.cleaned_data['nourriture']
             nb_cages = form.cleaned_data['nb_cages']
             argent = form.cleaned_data['argent']
-            nom=form.cleaned_data['nom']
+            if Elevage.objects.filter(nom=nom).exists():
+                messages.error(request, "Un élevage avec ce nom existe déjà.")
+                return redirect('jeu:nouveau')  # Rediriger vers le formulaire pour corriger
+
             elevage = Elevage(
-            nom=nom,
-            nombre_lapins_males=nb_lapins_males,
-            nombre_lapins_femelles=nb_lapins_femelles,
-            nourriture=nourriture,
-            cages=nb_cages,
-            argent=argent
+                nom=nom,
+                nourriture=nourriture,
+                cages=nb_cages,
+                argent=argent
             )
 
-            
+
+            regle = Regle.objects.first()  
+            if regle:
+                elevage.regle = regle
+
+
             elevage.save()
 
-            return redirect('jeu:confirmation')  
+
+            for _ in range(nb_lapins_males):
+                Individu.objects.create(sexe='m', age=0, etat='present', elevage=elevage)
+            for _ in range(nb_lapins_femelles):
+                Individu.objects.create(sexe='f', age=0, etat='present', elevage=elevage)
+
+
+            return redirect('jeu:confirmation')
     else:
         form = InitialisationForm()
 
