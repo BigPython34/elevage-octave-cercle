@@ -1,0 +1,10 @@
+{% block title %}Page d'Accueil - Élevage de Lapins{% endblock %}
+
+{% block content %}
+    <h1>Bienvenue dans votre élevage de lapins !</h1>
+    <p>Choisissez une action ci-dessous :</p>
+    <ul>
+        <li><a href="{% url 'jeu:nouveau' %}">Créer un nouvel élevage</a></li>
+        <li><a href="{% url 'jeu:liste' %}">Voir la liste des élevages</a></li>
+    </ul>
+{% endblock %}

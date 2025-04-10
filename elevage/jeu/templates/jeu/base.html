@@ -1,0 +1,21 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Élevage de Lapins{% endblock %}</title>
+</head>
+<body>
+    <!-- Menu de navigation -->
+    <nav>
+        <ul>
+            <li><a href="{% url 'jeu:nouveau' %}">Nouvel élevage</a></li>
+            <li><a href="{% url 'jeu:liste' %}">Liste des élevages</a></li>
+        </ul>
+    </nav>
+
+    <!-- Contenu spécifique à chaque page -->
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

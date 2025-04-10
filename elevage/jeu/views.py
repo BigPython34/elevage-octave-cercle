@@ -2,9 +2,13 @@ from django.shortcuts import render, redirect,get_object_or_404
 from .forms import InitialisationForm,TourActionForm
 from .models import Elevage,Individu,Regle
 from django.contrib import messages
+
+def accueil(request):
+    return render(request, 'jeu/accueil.html')
+
 def confirmation(request):
 
-    return render(request, 'jeu:confirmation.html')  
+    return render(request, 'jeu/confirmation.html')  
 
 def nouveau(request):
     if request.method == 'POST':

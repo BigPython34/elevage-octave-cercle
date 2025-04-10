@@ -5,6 +5,7 @@ from . import views
 app_name = 'jeu'
 
 urlpatterns = [
+    path('', views.accueil, name='accueil'),
     path('nouveau/', views.nouveau, name='nouveau'),  
     path('confirmation/', views.confirmation, name='confirmation'),  
     path('liste/', views.liste, name='liste'),
