@@ -19,7 +19,29 @@ class Elevage(models.Model):
     def __str__(self):
         return self.nom
 
+    def avancer_tour(self, actions_saisies):
 
+        regle = Regle.objects.first()
+
+        self.argent += actions_saisies.get('argent', 0)
+        self.nourriture += actions_saisies.get('nourriture', 0)
+        
+
+        self.gestion_alimentation()
+
+
+        self.reproduction(regle)
+
+
+        self.mise_a_jour_individus()
+
+        self.survie_individus()
+
+
+        self.mettre_a_jour_nombre_lapins()
+
+        self.save()
+    
 class Individu(models.Model):
     ETAT_CHOICES = [
         ('present', 'Présent'),
