@@ -42,7 +42,15 @@ class Elevage(models.Model):
         if not regle:
             return "Aucune règle définie pour cet élevage."
 
-        # Étape 1 : Préparer la liste des individus avec leur consommation
+        log = {
+            "morts_faim": 0,
+            "naissances": 0,
+            "morts_surpopulation": 0,
+            "nourriture_utilisee": 0,
+            "nourriture_restant": self.nourriture,
+        }
+
+        # Étape 1 : Consommation
         individus_consommation = []
         for individu in self.individus.filter(etat='present'):
             if individu.age == 1:
@@ -53,10 +61,7 @@ class Elevage(models.Model):
                 conso = regle.consommation_nourriture_adulte
             individus_consommation.append((conso, individu))
 
-        # Étape 2 : Trier les individus par consommation croissante
-        individus_consommation.sort(key=lambda x: x[0])
-
-        # Étape 3 : Nourrir ce qu'on peut
+        individus_consommation.sort(key=lambda x: x[0])  # Trier par consommation croissante
         nourriture_disponible = self.nourriture
         total_nourriture_utilisee = 0
 
@@ -67,17 +72,20 @@ class Elevage(models.Model):
             else:
                 individu.etat = 'mort'
                 individu.save()
+                log["morts_faim"] += 1
 
-        # Étape 4 : Reproduction
+        # Étape 2 : Reproduction
         femelles_reproductrices = self.individus.filter(
             sexe='f',
             etat='present',
             age__gte=regle.age_min_gravide,
             age__lte=regle.age_max_gravide
         )
+
         for femelle in femelles_reproductrices:
             if femelle.age >= 6:
                 nombre_lapereaux = random.randint(1, regle.max_par_portee)
+                log["naissances"] += nombre_lapereaux
                 for _ in range(nombre_lapereaux):
                     sexe = random.choice(['m', 'f'])
                     Individu.objects.create(
@@ -87,7 +95,7 @@ class Elevage(models.Model):
                         elevage=self
                     )
 
-        # Étape 5 : Surpopulation
+        # Étape 3 : Surpopulation
         total_individus = self.individus.filter(etat='present').count()
         capacite_max = self.cages * regle.max_individus_par_cage
 
@@ -97,8 +105,9 @@ class Elevage(models.Model):
             for individu in individus_a_mourir:
                 individu.etat = 'mort'
                 individu.save()
+                log["morts_surpopulation"] += 1
 
-        # Étape 6 : Vieillissement
+        # Étape 4 : Vieillissement
         for individu in self.individus.filter(etat='present'):
             individu.age += 1
             individu.save()
@@ -107,7 +116,20 @@ class Elevage(models.Model):
         self.nourriture -= total_nourriture_utilisee
         self.save()
 
-        return "Tour terminé avec succès."
+        log["nourriture_utilisee"] = total_nourriture_utilisee
+        log["nourriture_restant"] = self.nourriture
+
+        # Résumé lisible
+        resume = (
+            f"Tour terminé :\n"
+            f"- {log['morts_faim']} mort(s) de faim\n"
+            f"- {log['naissances']} naissance(s)\n"
+            f"- {log['morts_surpopulation']} mort(s) par surpopulation\n"
+            f"- {log['nourriture_utilisee']} unités de nourriture utilisées\n"
+            f"- {log['nourriture_restant']} unités de nourriture restantes"
+        )
+
+        return resume
 
 class Individu(models.Model):
     ETAT_CHOICES = [
