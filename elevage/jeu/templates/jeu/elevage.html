@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de l'élevage : {{ elevage.nom }}</title>
+</head>
+<body>
+    <h1>Détails de l'élevage : {{ elevage.nom }}</h1>
+    
+    <h2>Informations de l'élevage</h2>
+    <p><strong>Nombre de lapins mâles:</strong> {{ elevage.nombre_lapins_males }}</p>
+    <p><strong>Nombre de lapins femelles:</strong> {{ elevage.nombre_lapins_femelles }}</p>
+    <p><strong>Quantité de nourriture:</strong> {{ elevage.nourriture }} kg</p>
+    <p><strong>Nombre de cages:</strong> {{ elevage.cages }}</p>
+    <p><strong>Argent en caisse:</strong> {{ elevage.argent }} €</p>
+    
+    <h2>Liste des individus</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Sexe</th>
+                <th>Âge (mois)</th>
+                <th>État</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for individu in individus %}
+            <tr>
+                <td>{{ individu.nom }}</td>
+                <td>{{ individu.sexe }}</td>
+                <td>{{ individu.age }}</td>
+                <td>{{ individu.etat }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Aucun individu dans cet élevage.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <a href="{% url 'jeu:liste' %}">Retour à la liste des élevages</a>
+</body>
+</html>
+
+<h2>Actions du tour</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>Vente de lapins</legend>
+        {{ form.vendre_males.label_tag }} {{ form.vendre_males }}
+        {{ form.vendre_femelles.label_tag }} {{ form.vendre_femelles }}
+    </fieldset>
+
+    <fieldset>
+        <legend>Achat de ressources</legend>
+        {{ form.acheter_nourriture.label_tag }} {{ form.acheter_nourriture }}
+        {{ form.acheter_cages.label_tag }} {{ form.acheter_cages }}
+    </fieldset>
+
+    {% if form.non_field_errors %}
+        <ul style="color: red;">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <button type="submit">Valider les actions</button>
+</form>

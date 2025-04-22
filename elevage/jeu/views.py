@@ -62,7 +62,8 @@ def liste(request):
 
 def elevage(request, elevage_id):
     elevage = get_object_or_404(Elevage, pk=elevage_id)
-    individus = elevage.individus.all()
+    individus = elevage.individus.filter(etat='present')
+    regle = elevage.regle
 
     if request.method == 'POST':
         form = TourActionForm(request.POST)
@@ -74,40 +75,49 @@ def elevage(request, elevage_id):
             acheter_nourriture = actions['acheter_nourriture']
             acheter_cages = actions['acheter_cages']
 
-            males = elevage.nombre_lapins_males
-            femelles = elevage.nombre_lapins_femelles
-            argent = elevage.argent
-
             erreurs = []
-            if vendre_males > males:
+
+            lapins_males = individus.filter(sexe='m').count()
+            lapins_femelles = individus.filter(sexe='f').count()
+
+            if vendre_males > lapins_males:
                 erreurs.append("Vous ne pouvez pas vendre plus de lapins mâles que vous n'en avez.")
-            if vendre_femelles > femelles:
+            if vendre_femelles > lapins_femelles:
                 erreurs.append("Vous ne pouvez pas vendre plus de femelles que vous n'en avez.")
 
+            if not regle:
+                erreurs.append("Aucune règle définie pour cet élevage.")
+            else:
+                prix_vente = regle.prix_vente_lapin
+                prix_nourriture = regle.prix_nourriture
+                prix_cage = regle.prix_cage
+                total_ventes=(vendre_males+vendre_femelles)*prix_vente
+                total_achats = 0.001 * acheter_nourriture * prix_nourriture + acheter_cages * prix_cage
 
-            prix_vente_male = 1
-            prix_vente_femelle = 1
-            prix_nourriture = 1
-            prix_cage = 1
-
-            total_achats = acheter_nourriture * prix_nourriture + acheter_cages * prix_cage
-            total_ventes = vendre_males * prix_vente_male + vendre_femelles * prix_vente_femelle
-
-            if total_achats > argent + total_ventes:
-                erreurs.append("Vous n'avez pas assez d'argent pour ces achats.")
+                if total_achats > elevage.argent+total_ventes:
+                    erreurs.append("Vous n'avez pas assez d'argent pour ces achats.")
 
             if erreurs:
                 for erreur in erreurs:
                     form.add_error(None, erreur)
             else:
-                # Mise à jour des ressources
-                elevage.nombre_lapins_males -= vendre_males
-                elevage.nombre_lapins_femelles -= vendre_femelles
-                elevage.nourriture += acheter_nourriture
+                # Appliquer les achats (via avancer_tour)
+                elevage.nourriture += 0.001*acheter_nourriture
                 elevage.cages += acheter_cages
-                elevage.argent += total_ventes - total_achats
+                elevage.avancer_tour()
 
+
+                males_a_vendre = list(individus.filter(sexe='m')[:vendre_males])
+                femelles_a_vendre = list(individus.filter(sexe='f')[:vendre_femelles])
+                individus_a_vendre = males_a_vendre + femelles_a_vendre
+
+                for individu in individus_a_vendre:
+                    individu.etat = 'vendu'
+                    individu.save()
+
+                elevage.argent += total_ventes-total_achats
                 elevage.save()
+
                 return redirect('jeu:elevage_detail', elevage_id=elevage.id)
     else:
         form = TourActionForm()

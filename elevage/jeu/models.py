@@ -23,99 +23,88 @@ class Elevage(models.Model):
     nourriture = models.IntegerField(default=0)  
     argent = models.IntegerField(default=0)  
     cages = models.IntegerField(default=0)  
-    nom = models.CharField(max_length=100, unique=True,default="Nom par défaut")
-    regle = models.ForeignKey(Regle, on_delete=models.SET_NULL, null=True, blank=True)
+    nom = models.CharField(max_length=100, unique=True, default="Nom par défaut")
+    regle = models.ForeignKey('Regle', on_delete=models.SET_NULL, null=True, blank=True)
+
     @property
     def nombre_lapins_males(self):
-
         return self.individus.filter(sexe='m', etat='present').count()
 
     @property
     def nombre_lapins_femelles(self):
-
         return self.individus.filter(sexe='f', etat='present').count()
+
     def __str__(self):
         return self.nom
 
-    def set_nombre_lapins_males(self, nombre):
-
-        self.nombre_lapins_males = nombre
-
-    def set_nombre_lapins_femelles(self, nombre):
-
-        self.nombre_lapins_femelles = nombre
-    
-    def avancer_tour(self, actions_saisies):
-
-
+    def avancer_tour(self):
         regle = self.regle
-        
         if not regle:
             return "Aucune règle définie pour cet élevage."
 
-
-        total_nourriture_requise = 0
-        
-        total_nourriture_requise += self.nombre_lapins_males * regle.consommation_nourriture_adulte
-        total_nourriture_requise += self.nombre_lapins_femelles * regle.consommation_nourriture_adulte
-        
-
+        # Étape 1 : Préparer la liste des individus avec leur consommation
+        individus_consommation = []
         for individu in self.individus.filter(etat='present'):
             if individu.age == 1:
-                total_nourriture_requise += regle.consommation_m1
-                continue
+                conso = regle.consommation_m1
             elif individu.age == 2:
+                conso = regle.consommation_m2
+            else:
+                conso = regle.consommation_nourriture_adulte
+            individus_consommation.append((conso, individu))
 
-                total_nourriture_requise += regle.consommation_m2
-            elif individu.age >= 3:
+        # Étape 2 : Trier les individus par consommation croissante
+        individus_consommation.sort(key=lambda x: x[0])
 
-                total_nourriture_requise += regle.consommation_nourriture_adulte
-        
+        # Étape 3 : Nourrir ce qu'on peut
+        nourriture_disponible = self.nourriture
+        total_nourriture_utilisee = 0
 
-        if self.nourriture < total_nourriture_requise:
-
-            individus_a_mourir = self.individus.filter(etat='present')[:self.individus.count() - (self.nourriture // regle.consommation_nourriture_adulte)]
-            for individu in individus_a_mourir:
+        for conso, individu in individus_consommation:
+            if nourriture_disponible >= conso:
+                nourriture_disponible -= conso
+                total_nourriture_utilisee += conso
+            else:
                 individu.etat = 'mort'
                 individu.save()
 
-
-        femelles_reproductrices = self.individus.filter(sexe='f', etat='present', age__gte=regle.age_min_gravide, age__lte=regle.age_max_gravide)
+        # Étape 4 : Reproduction
+        femelles_reproductrices = self.individus.filter(
+            sexe='f',
+            etat='present',
+            age__gte=regle.age_min_gravide,
+            age__lte=regle.age_max_gravide
+        )
         for femelle in femelles_reproductrices:
-
             if femelle.age >= 6:
-                nombre_lapereaux = random.randint(1, regle.max_par_portee)  
-                sexe_lapereaux = random.choice(['m', 'f'])  
-
-
+                nombre_lapereaux = random.randint(1, regle.max_par_portee)
                 for _ in range(nombre_lapereaux):
+                    sexe = random.choice(['m', 'f'])
                     Individu.objects.create(
-                        sexe=sexe_lapereaux,
-                        age=0,  
+                        sexe=sexe,
+                        age=0,
                         etat='present',
                         elevage=self
                     )
-        
 
+        # Étape 5 : Surpopulation
         total_individus = self.individus.filter(etat='present').count()
-        if total_individus > self.cages * regle.max_individus_par_cage:
+        capacite_max = self.cages * regle.max_individus_par_cage
 
-            excedent = total_individus - self.cages * regle.max_individus_par_cage
+        if total_individus > capacite_max:
+            excedent = total_individus - capacite_max
             individus_a_mourir = self.individus.filter(etat='present')[:excedent]
             for individu in individus_a_mourir:
                 individu.etat = 'mort'
                 individu.save()
-        
 
+        # Étape 6 : Vieillissement
         for individu in self.individus.filter(etat='present'):
             individu.age += 1
             individu.save()
 
-
-        self.nourriture -= total_nourriture_requise
-        self.argent -= actions_saisies['argent_dépensé']  
-
-
+        # Mise à jour des ressources
+        self.nourriture -= total_nourriture_utilisee
         self.save()
 
         return "Tour terminé avec succès."
