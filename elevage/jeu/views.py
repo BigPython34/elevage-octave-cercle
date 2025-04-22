@@ -64,7 +64,7 @@ def elevage(request, elevage_id):
     elevage = get_object_or_404(Elevage, pk=elevage_id)
     individus = elevage.individus.filter(etat='present')
     regle = elevage.regle
-
+    resume=""
     if request.method == 'POST':
         form = TourActionForm(request.POST)
         if form.is_valid():
@@ -104,7 +104,7 @@ def elevage(request, elevage_id):
                 # Appliquer les achats (via avancer_tour)
                 elevage.nourriture += 0.001*acheter_nourriture
                 elevage.cages += acheter_cages
-                elevage.avancer_tour()
+                resume=elevage.avancer_tour()
 
 
                 males_a_vendre = list(individus.filter(sexe='m')[:vendre_males])
@@ -118,7 +118,12 @@ def elevage(request, elevage_id):
                 elevage.argent += total_ventes-total_achats
                 elevage.save()
 
-                return redirect('jeu:elevage_detail', elevage_id=elevage.id)
+                return render(request, 'jeu/elevage_detail.html', {
+                    'elevage': elevage,
+                    'individus': individus,
+                    'form': form,
+                    'resume': resume,  # Passer le résumé au template
+                })
     else:
         form = TourActionForm()
 
@@ -126,4 +131,17 @@ def elevage(request, elevage_id):
         'elevage': elevage,
         'individus': individus,
         'form': form,
+        'resume':resume
+    })
+
+def avancer_tour_view(request, elevage_id):
+    elevage = Elevage.objects.get(id=elevage_id)
+
+    if request.method == "POST":
+        # Effectuer les actions du tour
+        resume = elevage.avancer_tour()
+
+    return render(request, 'jeu/elevage_detail.html', {
+        'elevage': elevage,
+        'resume': resume,  # Passage du résumé au template
     })
