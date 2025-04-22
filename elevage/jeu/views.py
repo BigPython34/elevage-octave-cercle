@@ -134,14 +134,3 @@ def elevage(request, elevage_id):
         'resume':resume
     })
 
-def avancer_tour_view(request, elevage_id):
-    elevage = Elevage.objects.get(id=elevage_id)
-
-    if request.method == "POST":
-        # Effectuer les actions du tour
-        resume = elevage.avancer_tour()
-
-    return render(request, 'jeu/elevage_detail.html', {
-        'elevage': elevage,
-        'resume': resume,  # Passage du résumé au template
-    })
